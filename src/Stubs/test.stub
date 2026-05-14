@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use App\Models\{{ model }};
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+final class {{ model }}ApiTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_it_can_list_{{ table }}(): void
+    {
+        {{ model }}::factory()->count(2)->create();
+
+        $response = $this->getJson('/api/{{ route }}');
+
+        $response->assertOk()->assertJsonStructure(['data']);
+    }
+}

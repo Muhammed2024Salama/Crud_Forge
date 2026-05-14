@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Interfaces;
+
+use App\Models\{{ model }};
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+interface {{ model }}RepositoryInterface
+{
+    /**
+     * @param array<string, mixed> $filters
+     */
+    public function paginate(array $filters = []): LengthAwarePaginator;
+
+    public function find(int $id): {{ model }};
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function create(array $data): {{ model }};
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function update({{ model }} ${{ modelVariable }}, array $data): {{ model }};
+
+    public function delete({{ model }} ${{ modelVariable }}): bool;
+}

@@ -1,0 +1,9 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'created_successfully' => '{{ model }} created successfully.',
+    'updated_successfully' => '{{ model }} updated successfully.',
+    'deleted_successfully' => '{{ model }} deleted successfully.',
+];

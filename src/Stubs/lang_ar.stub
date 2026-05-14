@@ -1,0 +1,9 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'created_successfully' => 'تم إنشاء {{ model }} بنجاح.',
+    'updated_successfully' => 'تم تحديث {{ model }} بنجاح.',
+    'deleted_successfully' => 'تم حذف {{ model }} بنجاح.',
+];

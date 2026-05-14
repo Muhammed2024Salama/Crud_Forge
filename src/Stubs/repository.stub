@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Repositories;
+
+use App\Interfaces\{{ model }}RepositoryInterface;
+use App\Models\{{ model }};
+use MuhammedSalama\CrudForge\Support\Database\DatabaseDriverHelper;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+final class {{ model }}Repository implements {{ model }}RepositoryInterface
+{
+    private const SEARCHABLE_FIELDS = [{{ searchableFields }}];
+
+    private const SORTABLE_FIELDS = [{{ sortableFields }}];
+
+    public function paginate(array $filters = []): LengthAwarePaginator
+    {
+        $query = {{ model }}::query();
+
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        if ($search !== '') {
+            $query->where(function ($query) use ($search): void {
+                foreach (self::SEARCHABLE_FIELDS as $index => $column) {
+                    DatabaseDriverHelper::guardSafeColumn($column);
+
+                    if ($index === 0) {
+                        DatabaseDriverHelper::applyCaseInsensitiveSearch($query, $column, $search);
+                        continue;
+                    }
+
+                    $query->orWhere($column, DatabaseDriverHelper::caseInsensitiveOperator(), '%' . addcslashes($search, '%_\\') . '%');
+                }
+            });
+        }
+
+        $sortBy = (string) ($filters['sort_by'] ?? 'created_at');
+        $sortDirection = strtolower((string) ($filters['sort_direction'] ?? 'desc'));
+
+        if (! in_array($sortBy, self::SORTABLE_FIELDS, true)) {
+            $sortBy = 'created_at';
+        }
+
+        if (! in_array($sortDirection, ['asc', 'desc'], true)) {
+            $sortDirection = 'desc';
+        }
+
+        return $query
+            ->orderBy($sortBy, $sortDirection)
+            ->paginate((int) ($filters['per_page'] ?? 15));
+    }
+
+    public function find(int $id): {{ model }}
+    {
+        return {{ model }}::query()->findOrFail($id);
+    }
+
+    public function create(array $data): {{ model }}
+    {
+        return {{ model }}::query()->create($data);
+    }
+
+    public function update({{ model }} ${{ modelVariable }}, array $data): {{ model }}
+    {
+        ${{ modelVariable }}->update($data);
+
+        return ${{ modelVariable }}->refresh();
+    }
+
+    public function delete({{ model }} ${{ modelVariable }}): bool
+    {
+        return (bool) ${{ modelVariable }}->delete();
+    }
+}

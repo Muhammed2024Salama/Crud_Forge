@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use App\Interfaces\{{ model }}RepositoryInterface;
+use App\Models\{{ model }};
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+final readonly class {{ model }}Service
+{
+    public function __construct(private {{ model }}RepositoryInterface $repository) {}
+
+    /**
+     * @param array<string, mixed> $filters
+     */
+    public function paginate(array $filters = []): LengthAwarePaginator
+    {
+        return $this->repository->paginate($filters);
+    }
+
+    public function find(int $id): {{ model }}
+    {
+        return $this->repository->find($id);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function create(array $data): {{ model }}
+    {
+        return $this->repository->create($data);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function update({{ model }} ${{ modelVariable }}, array $data): {{ model }}
+    {
+        return $this->repository->update(${{ modelVariable }}, $data);
+    }
+
+    public function delete({{ model }} ${{ modelVariable }}): bool
+    {
+        return $this->repository->delete(${{ modelVariable }});
+    }
+}

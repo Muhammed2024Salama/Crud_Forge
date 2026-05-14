@@ -1,0 +1,59 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Store{{ model }}Request;
+use App\Http\Requests\Update{{ model }}Request;
+use App\Http\Resources\{{ model }}Resource;
+use App\Models\{{ model }};
+use App\Services\{{ model }}Service;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\Response;
+
+final class {{ model }}Controller extends Controller
+{
+    public function __construct(private readonly {{ model }}Service $service) {}
+
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        return {{ model }}Resource::collection($this->service->paginate($request->only([
+            'search',
+            'sort_by',
+            'sort_direction',
+            'per_page',
+        ])));
+    }
+
+    public function store(Store{{ model }}Request $request): JsonResponse
+    {
+        ${{ modelVariable }} = $this->service->create($request->validated());
+
+        return (new {{ model }}Resource(${{ modelVariable }}))
+            ->response()
+            ->setStatusCode(Response::HTTP_CREATED);
+    }
+
+    public function show({{ model }} ${{ modelVariable }}): {{ model }}Resource
+    {
+        return new {{ model }}Resource(${{ modelVariable }});
+    }
+
+    public function update(Update{{ model }}Request $request, {{ model }} ${{ modelVariable }}): {{ model }}Resource
+    {
+        return new {{ model }}Resource($this->service->update(${{ modelVariable }}, $request->validated()));
+    }
+
+    public function destroy({{ model }} ${{ modelVariable }}): JsonResponse
+    {
+        $this->service->delete(${{ modelVariable }});
+
+        return response()->json([
+            'message' => __('{{ translation }}.deleted_successfully'),
+        ]);
+    }
+}

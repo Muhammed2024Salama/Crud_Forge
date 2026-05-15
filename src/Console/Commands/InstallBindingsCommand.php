@@ -11,11 +11,11 @@ use Illuminate\Support\Str;
 final class InstallBindingsCommand extends Command
 {
     protected $signature = 'crudforge:install-bindings
-                            {name? : The generated model name, for example Product}
+                            {name? : The generated model name, e.g. Product}
                             {--all : Detect all *RepositoryInterface files and install matching bindings}
                             {--force : Write changes without confirmation}';
 
-    protected $description = 'Create or update App\Providers\CrudForgeGeneratedServiceProvider with generated repository bindings.';
+    protected $description = 'Create or update App\Providers\CrudForgeGeneratedServiceProvider with repository bindings.';
 
     private const PROVIDER_PATH = 'app/Providers/CrudForgeGeneratedServiceProvider.php';
 
@@ -25,17 +25,30 @@ final class InstallBindingsCommand extends Command
 
     public function handle(Filesystem $files): int
     {
-        $bindings = $this->option('all')
-            ? $this->detectBindings($files)
-            : $this->bindingsForName((string) $this->argument('name'));
+        $useAll = (bool) $this->option('all');
+        $name   = trim((string) $this->argument('name'));
 
-        if ($bindings === []) {
-            $this->error('No bindings found. Pass a model name or use --all after generating repositories.');
+        if (! $useAll && $name === '') {
+            $this->error('Provide a model name (e.g. crudforge:install-bindings Product) or use --all.');
 
             return self::FAILURE;
         }
 
-        $providerPath = base_path(self::PROVIDER_PATH);
+        $bindings = $useAll
+            ? $this->detectBindings($files)
+            : $this->bindingsForName($name);
+
+        if ($bindings === []) {
+            $message = $useAll
+                ? 'No matching interface/repository pairs found. Run crudforge:generate first.'
+                : "No binding pair found for \"{$name}\". Run crudforge:generate {$name} first.";
+
+            $this->error($message);
+
+            return self::FAILURE;
+        }
+
+        $providerPath  = base_path(self::PROVIDER_PATH);
         $providerExists = $files->exists($providerPath);
 
         if ($providerExists && ! $this->option('force')) {
@@ -49,26 +62,24 @@ final class InstallBindingsCommand extends Command
         if (! $providerExists) {
             $files->ensureDirectoryExists(dirname($providerPath));
             $files->put($providerPath, $this->newProviderContent($bindings));
-
-            $this->info('Created app/Providers/CrudForgeGeneratedServiceProvider.php');
-            $this->showProviderRegistrationInstructions();
+            $this->info('Created ' . self::PROVIDER_PATH);
+            $this->showRegistrationHint();
 
             return self::SUCCESS;
         }
 
-        $existingContent = $files->get($providerPath);
-        $updatedContent = $this->appendMissingBindings($existingContent, $bindings);
+        $existing = $files->get($providerPath);
+        $updated  = $this->appendMissingBindings($existing, $bindings);
 
-        if ($updatedContent === $existingContent) {
+        if ($updated === $existing) {
             $this->info('No missing bindings found. Provider is already up to date.');
 
             return self::SUCCESS;
         }
 
-        $files->put($providerPath, $updatedContent);
-
-        $this->info('Updated app/Providers/CrudForgeGeneratedServiceProvider.php');
-        $this->showProviderRegistrationInstructions();
+        $files->put($providerPath, $updated);
+        $this->info('Updated ' . self::PROVIDER_PATH);
+        $this->showRegistrationHint();
 
         return self::SUCCESS;
     }
@@ -78,17 +89,14 @@ final class InstallBindingsCommand extends Command
      */
     private function bindingsForName(string $name): array
     {
-        $name = trim($name);
+        $studly = Str::studly($name);
 
-        if ($name === '') {
-            return [];
-        }
-
-        $studlyName = Str::studly($name);
+        $nsInterfaces   = rtrim((string) config('crudforge.namespaces.interfaces', 'App\\Interfaces'), '\\');
+        $nsRepositories = rtrim((string) config('crudforge.namespaces.repositories', 'App\\Repositories'), '\\');
 
         return [[
-            'interface' => "\\App\\Interfaces\\{$studlyName}RepositoryInterface::class",
-            'repository' => "\\App\\Repositories\\{$studlyName}Repository::class",
+            'interface'  => "\\{$nsInterfaces}\\{$studly}RepositoryInterface::class",
+            'repository' => "\\{$nsRepositories}\\{$studly}Repository::class",
         ]];
     }
 
@@ -97,8 +105,10 @@ final class InstallBindingsCommand extends Command
      */
     private function detectBindings(Filesystem $files): array
     {
-        $interfacePath = app_path('Interfaces');
-        $repositoryPath = app_path('Repositories');
+        $interfacePath  = rtrim((string) config('crudforge.paths.interfaces', app_path('Interfaces')), '/\\');
+        $repositoryPath = rtrim((string) config('crudforge.paths.repositories', app_path('Repositories')), '/\\');
+        $nsInterfaces   = rtrim((string) config('crudforge.namespaces.interfaces', 'App\\Interfaces'), '\\');
+        $nsRepositories = rtrim((string) config('crudforge.namespaces.repositories', 'App\\Repositories'), '\\');
 
         if (! $files->isDirectory($interfacePath) || ! $files->isDirectory($repositoryPath)) {
             return [];
@@ -114,6 +124,13 @@ final class InstallBindingsCommand extends Command
             }
 
             $baseName = Str::before($filename, 'RepositoryInterface.php');
+
+            // Validate baseName is a safe PHP class name to prevent invalid provider generation.
+            if (! preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $baseName)) {
+                $this->warn("Skipping file with non-standard name: {$filename}");
+                continue;
+            }
+
             $repositoryFile = $repositoryPath . DIRECTORY_SEPARATOR . $baseName . 'Repository.php';
 
             if (! $files->exists($repositoryFile)) {
@@ -121,8 +138,8 @@ final class InstallBindingsCommand extends Command
             }
 
             $bindings[] = [
-                'interface' => "\\App\\Interfaces\\{$baseName}RepositoryInterface::class",
-                'repository' => "\\App\\Repositories\\{$baseName}Repository::class",
+                'interface'  => "\\{$nsInterfaces}\\{$baseName}RepositoryInterface::class",
+                'repository' => "\\{$nsRepositories}\\{$baseName}Repository::class",
             ];
         }
 
@@ -160,16 +177,16 @@ PHP;
      */
     private function appendMissingBindings(string $content, array $bindings): string
     {
-        $missingBindings = array_values(array_filter(
+        $missing = array_values(array_filter(
             $bindings,
-            static fn (array $binding): bool => ! str_contains($content, $binding['interface'])
+            static fn (array $b): bool => ! str_contains($content, $b['interface'])
         ));
 
-        if ($missingBindings === []) {
+        if ($missing === []) {
             return $content;
         }
 
-        $newLines = $this->bindingLines($missingBindings, includeMarkers: false);
+        $newLines = $this->bindingLines($missing, includeMarkers: false);
 
         if (str_contains($content, self::START_MARKER) && str_contains($content, self::END_MARKER)) {
             return str_replace(
@@ -225,12 +242,12 @@ PHP;
         return implode(PHP_EOL, $lines);
     }
 
-    private function showProviderRegistrationInstructions(): void
+    private function showRegistrationHint(): void
     {
-        $this->line('');
-        $this->line('Register the provider in bootstrap/providers.php if it is not already registered:');
+        $this->newLine();
+        $this->line('Add to bootstrap/providers.php if not already registered:');
         $this->line('');
         $this->line('    App\\Providers\\CrudForgeGeneratedServiceProvider::class,');
-        $this->line('');
+        $this->newLine();
     }
 }

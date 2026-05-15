@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Models;
+namespace {{ nsModels }};
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-final class {{ model }} extends Model
+class {{ model }} extends Model
 {
     use HasFactory;
 
     protected $fillable = [
 {{ fillable }}
     ];
+{{ castsBlock }}
 }

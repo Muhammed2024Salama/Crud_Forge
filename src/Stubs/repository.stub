@@ -2,41 +2,44 @@
 
 declare(strict_types=1);
 
-namespace App\Repositories;
+namespace {{ nsRepositories }};
 
-use App\Interfaces\{{ model }}RepositoryInterface;
-use App\Models\{{ model }};
-use MuhammedSalama\CrudForge\Support\Database\DatabaseDriverHelper;
+use {{ nsInterfaces }}\{{ model }}RepositoryInterface;
+use {{ nsModels }}\{{ model }};
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
-final class {{ model }}Repository implements {{ model }}RepositoryInterface
+class {{ model }}Repository implements {{ model }}RepositoryInterface
 {
     private const SEARCHABLE_FIELDS = [{{ searchableFields }}];
 
     private const SORTABLE_FIELDS = [{{ sortableFields }}];
 
+    /**
+     * @param array<string, mixed> $filters
+     */
     public function paginate(array $filters = []): LengthAwarePaginator
     {
         $query = {{ model }}::query();
 
         $search = trim((string) ($filters['search'] ?? ''));
 
-        if ($search !== '') {
-            $query->where(function ($query) use ($search): void {
+        if ($search !== '' && self::SEARCHABLE_FIELDS !== []) {
+            $operator = DB::connection()->getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
+            $term     = '%' . addcslashes($search, '%_\\') . '%';
+
+            $query->where(function ($q) use ($operator, $term): void {
                 foreach (self::SEARCHABLE_FIELDS as $index => $column) {
-                    DatabaseDriverHelper::guardSafeColumn($column);
-
                     if ($index === 0) {
-                        DatabaseDriverHelper::applyCaseInsensitiveSearch($query, $column, $search);
-                        continue;
+                        $q->where($column, $operator, $term);
+                    } else {
+                        $q->orWhere($column, $operator, $term);
                     }
-
-                    $query->orWhere($column, DatabaseDriverHelper::caseInsensitiveOperator(), '%' . addcslashes($search, '%_\\') . '%');
                 }
             });
         }
 
-        $sortBy = (string) ($filters['sort_by'] ?? 'created_at');
+        $sortBy        = (string) ($filters['sort_by'] ?? 'created_at');
         $sortDirection = strtolower((string) ($filters['sort_direction'] ?? 'desc'));
 
         if (! in_array($sortBy, self::SORTABLE_FIELDS, true)) {
@@ -47,9 +50,11 @@ final class {{ model }}Repository implements {{ model }}RepositoryInterface
             $sortDirection = 'desc';
         }
 
+        $perPage = max(1, min((int) ($filters['per_page'] ?? 15), 100));
+
         return $query
             ->orderBy($sortBy, $sortDirection)
-            ->paginate((int) ($filters['per_page'] ?? 15));
+            ->paginate($perPage);
     }
 
     public function find(int $id): {{ model }}
@@ -57,11 +62,17 @@ final class {{ model }}Repository implements {{ model }}RepositoryInterface
         return {{ model }}::query()->findOrFail($id);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function create(array $data): {{ model }}
     {
         return {{ model }}::query()->create($data);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function update({{ model }} ${{ modelVariable }}, array $data): {{ model }}
     {
         ${{ modelVariable }}->update($data);

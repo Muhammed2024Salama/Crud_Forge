@@ -27,6 +27,8 @@ return [
         'tests' => 'Tests\\Feature',
     ],
 
+    'base_controller' => 'App\\Http\\Controllers\\Controller',
+
     'defaults' => [
         'pagination_per_page' => 15,
         'route_prefix' => 'api',

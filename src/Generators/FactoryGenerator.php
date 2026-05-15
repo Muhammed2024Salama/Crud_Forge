@@ -11,9 +11,9 @@ final class FactoryGenerator extends AbstractGenerator
     {
         $context = $this->buildContext($name, $fields);
 
-        return [
-            'path' => database_path("factories/{$context['model']}Factory.php"),
+        return [[
+            'path'    => database_path("factories/{$context['model']}Factory.php"),
             'content' => $this->render('factory', $context),
-        ];
+        ]];
     }
 }

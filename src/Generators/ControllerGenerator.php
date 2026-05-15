@@ -10,10 +10,11 @@ final class ControllerGenerator extends AbstractGenerator
     public function generate(string $name, array $fields): array
     {
         $context = $this->buildContext($name, $fields);
+        $base    = $this->outputPath('controllers', app_path('Http/Controllers/Api'));
 
-        return [
-            'path' => app_path("Http/Controllers/Api/{$context['model']}Controller.php"),
+        return [[
+            'path'    => $base . DIRECTORY_SEPARATOR . "{$context['model']}Controller.php",
             'content' => $this->render('controller', $context),
-        ];
+        ]];
     }
 }

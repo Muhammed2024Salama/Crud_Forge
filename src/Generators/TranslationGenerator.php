@@ -9,15 +9,16 @@ final class TranslationGenerator extends AbstractGenerator
     /** @param array<int, array<string, mixed>> $fields */
     public function generate(string $name, array $fields): array
     {
-        $context = $this->buildContext($name, $fields);
+        $context  = $this->buildContext($name, $fields);
+        $langBase = $this->outputPath('lang', lang_path());
 
         return [
             [
-                'path' => lang_path("en/{$context['translation']}.php"),
+                'path'    => $langBase . DIRECTORY_SEPARATOR . "en" . DIRECTORY_SEPARATOR . "{$context['translation']}.php",
                 'content' => $this->render('lang_en', $context),
             ],
             [
-                'path' => lang_path("ar/{$context['translation']}.php"),
+                'path'    => $langBase . DIRECTORY_SEPARATOR . "ar" . DIRECTORY_SEPARATOR . "{$context['translation']}.php",
                 'content' => $this->render('lang_ar', $context),
             ],
         ];

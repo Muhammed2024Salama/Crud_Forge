@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests;
+namespace {{ nsRequests }};
 
 use Illuminate\Foundation\Http\FormRequest;
 
-final class {{ requestClass }} extends FormRequest
+class {{ requestClass }} extends FormRequest
 {
     public function authorize(): bool
     {

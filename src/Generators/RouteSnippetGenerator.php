@@ -11,9 +11,9 @@ final class RouteSnippetGenerator extends AbstractGenerator
     {
         $context = $this->buildContext($name, $fields);
 
-        return [
-            'path' => base_path("routes/crudforge-{$context['route']}.php"),
+        return [[
+            'path'    => base_path("routes/crudforge-{$context['route']}.php"),
             'content' => $this->render('route', $context),
-        ];
+        ]];
     }
 }

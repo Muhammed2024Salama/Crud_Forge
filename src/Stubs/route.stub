@@ -1,1 +1,5 @@
-Route::apiResource('{{ route }}', \App\Http\Controllers\Api\{{ model }}Controller::class);
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+Route::apiResource('{{ route }}', \{{ nsControllers }}\{{ model }}Controller::class);

@@ -14,7 +14,6 @@ final class RequestGenerator extends AbstractGenerator
 
         $storeContext = array_merge($context, [
             'requestClass' => "Store{$context['model']}Request",
-            // 'rules' is already the store rules built by BuildsCrudContext
         ]);
 
         $updateContext = array_merge($context, [

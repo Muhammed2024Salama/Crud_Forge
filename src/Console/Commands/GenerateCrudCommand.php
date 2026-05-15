@@ -189,13 +189,9 @@ final class GenerateCrudCommand extends Command
 
     private function guardSafePath(string $path): void
     {
-        // Resolve the nearest existing ancestor directory to get a canonical path.
         $dir      = dirname($path);
         $resolved = realpath($dir) ?: realpath(dirname($dir));
 
-        // base_path() with trailing separator prevents sibling-directory bypass:
-        //   str_starts_with('/var/www/app_evil/x', '/var/www/app') → true (wrong!)
-        //   str_starts_with('/var/www/app_evil/x', '/var/www/app/') → false (correct)
         $base = rtrim(base_path(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 
         if (

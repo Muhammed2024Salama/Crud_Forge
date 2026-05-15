@@ -53,17 +53,12 @@ final class CrudForgeServiceProvider extends ServiceProvider
 
         $this->app->singleton(StubRendererContract::class, StubRenderer::class);
 
-        // Bind each core generator so the container can resolve it (and so
-        // that the tagged iterable resolves through the container properly).
         foreach (self::CORE_GENERATORS as $class) {
             $this->app->bind($class);
         }
 
-        // Tag core generators — third-party packages add to this tag to extend the pipeline.
         $this->app->tag(self::CORE_GENERATORS, 'crudforge.generators');
 
-        // The orchestrator iterates the TAGGED generators, so third-party additions
-        // automatically appear in the pipeline without any core changes.
         $this->app->singleton(GeneratorOrchestrator::class, static function (Application $app): GeneratorOrchestrator {
             return new GeneratorOrchestrator($app->tagged('crudforge.generators'));
         });

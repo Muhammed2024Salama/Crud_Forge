@@ -133,7 +133,6 @@ final class InstallBindingsCommand extends Command
     {
         $registryPath = base_path(self::REGISTRY_PATH);
 
-        // Load existing entries so we can merge without duplicates.
         $existing = $this->loadExistingRegistry($registryPath);
 
         $added = 0;
@@ -180,8 +179,6 @@ final class InstallBindingsCommand extends Command
             return [];
         }
 
-        // The file uses ::class constants which resolve to plain FQCNs (no leading \).
-        // Normalise to plain strings so our in-memory map is consistent.
         $normalised = [];
 
         foreach ($result as $abstract => $concrete) {

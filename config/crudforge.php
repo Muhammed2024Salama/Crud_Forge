@@ -82,5 +82,4 @@ return [
     | setup instructions instead.
     */
     'auto_register' => true,
-
 ];

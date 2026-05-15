@@ -41,10 +41,12 @@ final class GenerateCrudCommandTest extends TestCase
             File::delete($path);
         }
 
-        // Clean up any generated migration for the products table
         foreach (glob(database_path('migrations/*_create_products_table.php')) ?: [] as $f) {
             File::delete($f);
         }
+
+        File::delete(base_path('bootstrap/crudforge-bindings.php'));
+        File::delete(base_path('routes/crudforge.php'));
 
         parent::tearDown();
     }

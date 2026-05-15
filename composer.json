@@ -45,7 +45,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "MuhammedSalama\\CrudForge\\CrudForgeServiceProvider"
+                "MuhammedSalama\\CrudForge\\CrudForgeServiceProvider",
+                "MuhammedSalama\\CrudForge\\CrudForgeRuntimeServiceProvider"
             ]
         }
     },

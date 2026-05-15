@@ -68,9 +68,6 @@ final class DatabaseDriverHelperTest extends TestCase
 
     public function test_like_search_escapes_wildcard_characters(): void
     {
-        // The generated repository uses addcslashes('%_\\', ...) — verify the helper
-        // exposes a reusable guardSafeColumn that the generated code no longer calls
-        // at runtime (it's compile-time safe), but package-level code can still use.
         DatabaseDriverHelper::guardSafeColumn('search_column');
 
         $this->assertTrue(true);

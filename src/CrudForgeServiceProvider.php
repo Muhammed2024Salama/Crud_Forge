@@ -6,6 +6,7 @@ namespace MuhammedSalama\CrudForge;
 
 use MuhammedSalama\CrudForge\Console\Commands\GenerateCrudCommand;
 use MuhammedSalama\CrudForge\Console\Commands\InstallBindingsCommand;
+use MuhammedSalama\CrudForge\Console\Commands\InstallCommand;
 use MuhammedSalama\CrudForge\Contracts\StubRendererContract;
 use MuhammedSalama\CrudForge\Generators\ControllerGenerator;
 use MuhammedSalama\CrudForge\Generators\FactoryGenerator;
@@ -82,6 +83,7 @@ final class CrudForgeServiceProvider extends ServiceProvider
             $this->commands([
                 GenerateCrudCommand::class,
                 InstallBindingsCommand::class,
+                InstallCommand::class,
             ]);
         }
     }

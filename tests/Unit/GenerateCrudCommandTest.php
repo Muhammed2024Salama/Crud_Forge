@@ -45,6 +45,9 @@ final class GenerateCrudCommandTest extends TestCase
             File::delete($f);
         }
 
+        File::delete(base_path('bootstrap/crudforge-bindings.php'));
+        File::delete(base_path('routes/crudforge.php'));
+
         parent::tearDown();
     }
 

@@ -3,7 +3,7 @@
         'name' => 'muhammedsalama/crudforge',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '9aed043cafc0e214d5b0e112cf8f731d4f572020',
+        'reference' => '355d80ce8da8584f188ea080f021e5eb5cf77b40',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -550,7 +550,7 @@
         'muhammedsalama/crudforge' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '9aed043cafc0e214d5b0e112cf8f731d4f572020',
+            'reference' => '355d80ce8da8584f188ea080f021e5eb5cf77b40',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

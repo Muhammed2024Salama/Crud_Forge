@@ -10,10 +10,11 @@ final class InterfaceGenerator extends AbstractGenerator
     public function generate(string $name, array $fields): array
     {
         $context = $this->buildContext($name, $fields);
+        $base    = $this->outputPath('interfaces', app_path('Interfaces'));
 
-        return [
-            'path' => app_path("Interfaces/{$context['model']}RepositoryInterface.php"),
+        return [[
+            'path'    => $base . DIRECTORY_SEPARATOR . "{$context['model']}RepositoryInterface.php",
             'content' => $this->render('interface', $context),
-        ];
+        ]];
     }
 }

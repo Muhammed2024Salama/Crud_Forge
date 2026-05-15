@@ -2,22 +2,62 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature;
+namespace {{ nsTests }};
 
-use App\Models\{{ model }};
+use {{ nsModels }}\{{ model }};
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
 use Tests\TestCase;
 
 final class {{ model }}ApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_can_list_{{ table }}(): void
+    public function test_index_returns_paginated_list(): void
     {
-        {{ model }}::factory()->count(2)->create();
+        {{ model }}::factory()->count(3)->create();
 
-        $response = $this->getJson('/api/{{ route }}');
+        $this->getJson('/api/{{ route }}')
+            ->assertOk()
+            ->assertJsonStructure(['data', 'meta']);
+    }
 
-        $response->assertOk()->assertJsonStructure(['data']);
+    public function test_store_creates_resource(): void
+    {
+        $payload = Arr::except({{ model }}::factory()->make()->toArray(), ['id', 'created_at', 'updated_at', 'deleted_at']);
+
+        $this->postJson('/api/{{ route }}', $payload)
+            ->assertCreated()
+            ->assertJsonStructure(['data' => ['id']]);
+    }
+
+    public function test_show_returns_single_resource(): void
+    {
+        ${{ modelVariable }} = {{ model }}::factory()->create();
+
+        $this->getJson("/api/{{ route }}/{${{ modelVariable }}->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', ${{ modelVariable }}->id);
+    }
+
+    public function test_update_modifies_resource(): void
+    {
+        ${{ modelVariable }} = {{ model }}::factory()->create();
+        $payload            = {{ model }}::factory()->make()->toArray();
+
+        $this->putJson("/api/{{ route }}/{${{ modelVariable }}->id}", $payload)
+            ->assertOk()
+            ->assertJsonPath('data.id', ${{ modelVariable }}->id);
+    }
+
+    public function test_destroy_deletes_resource(): void
+    {
+        ${{ modelVariable }} = {{ model }}::factory()->create();
+
+        $this->deleteJson("/api/{{ route }}/{${{ modelVariable }}->id}")
+            ->assertOk()
+            ->assertJsonStructure(['message']);
+
+        $this->assertDatabaseMissing('{{ table }}', ['id' => ${{ modelVariable }}->id]);
     }
 }

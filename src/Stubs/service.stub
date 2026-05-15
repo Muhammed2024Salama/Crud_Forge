@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Services;
+namespace {{ nsServices }};
 
-use App\Interfaces\{{ model }}RepositoryInterface;
-use App\Models\{{ model }};
+use {{ nsInterfaces }}\{{ model }}RepositoryInterface;
+use {{ nsModels }}\{{ model }};
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-final readonly class {{ model }}Service
+class {{ model }}Service
 {
-    public function __construct(private {{ model }}RepositoryInterface $repository) {}
+    public function __construct(private readonly {{ model }}RepositoryInterface $repository) {}
 
     /**
      * @param array<string, mixed> $filters

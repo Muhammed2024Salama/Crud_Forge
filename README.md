@@ -1,75 +1,40 @@
 # CrudForge
 
-CrudForge is a Laravel package that generates production-ready CRUD modules inside any existing Laravel application using Artisan commands.
+CrudForge is a Laravel package that generates production-ready CRUD modules inside any existing Laravel application using a single Artisan command.
 
-It focuses on clean Laravel architecture, deterministic stub-based generation, and MySQL/PostgreSQL-compatible generated code.
+It focuses on clean architecture, deterministic stub-based generation, zero runtime coupling, and MySQL/PostgreSQL-compatible generated code.
 
-## Package Name
+---
+
+## Installation
 
 ```bash
 composer require muhammedsalama/crudforge
 ```
 
-Composer package names must be lowercase:
+Laravel package auto-discovery registers the service provider automatically.
 
-```text
-muhammedsalama/crudforge
-```
-
-Internal PHP namespace:
-
-```php
-MuhammedSalama\CrudForge
-```
-
-Generated Laravel application files still use normal app namespaces:
-
-```php
-App\Models\Product
-App\Http\Controllers\Api\ProductController
-App\Services\ProductService
-App\Repositories\ProductRepository
-App\Interfaces\ProductRepositoryInterface
-```
-
----
-
-## Local Path Installation
-
-Inside your Laravel application `composer.json`:
-
-```json
-"repositories": [
-  {
-    "type": "path",
-    "url": "../crudforge"
-  }
-]
-```
-
-Then run:
+Publish the config (optional):
 
 ```bash
-composer require muhammedsalama/crudforge:@dev
-composer dump-autoload
 php artisan vendor:publish --tag=crudforge-config
 ```
 
-Laravel package auto-discovery registers the package provider automatically:
+Publish stubs to customise them (optional):
 
-```php
-MuhammedSalama\CrudForge\CrudForgeServiceProvider::class
+```bash
+php artisan vendor:publish --tag=crudforge-stubs
 ```
 
 ---
 
-## Generate CRUD
+## Generate a CRUD Module
 
 ```bash
 php artisan crudforge:generate Product --fields="name:string,price:decimal,status:boolean"
 ```
 
-Generated files:
+### Generated files
 
 ```text
 app/Models/Product.php
@@ -88,23 +53,26 @@ lang/ar/products.php
 routes/crudforge-products.php
 ```
 
+### Options
+
+| Option | Description |
+|---|---|
+| `--fields=` | Comma-separated `name:type` pairs (required) |
+| `--force` | Overwrite all existing files without confirmation |
+
+Without `--force`, CrudForge asks per file and **skips** declined files without aborting the entire run.
+
 ---
 
 ## Install Repository Bindings
 
-Generated controllers depend on services, and generated services depend on repository interfaces. After generating a module, install the repository binding provider:
+Generated services depend on repository interfaces. After generating a module, wire the binding:
 
 ```bash
 php artisan crudforge:install-bindings Product
 ```
 
-This creates or updates:
-
-```text
-app/Providers/CrudForgeGeneratedServiceProvider.php
-```
-
-Example generated binding:
+This creates or updates `app/Providers/CrudForgeGeneratedServiceProvider.php`:
 
 ```php
 $this->app->bind(
@@ -113,26 +81,13 @@ $this->app->bind(
 );
 ```
 
-You can also scan all generated repository interfaces and repositories:
+Detect and install all generated bindings at once:
 
 ```bash
 php artisan crudforge:install-bindings --all
 ```
 
-If the provider already exists, CrudForge safely appends only missing bindings and avoids duplicates.
-
-To skip confirmation in automation:
-
-```bash
-php artisan crudforge:install-bindings Product --force
-php artisan crudforge:install-bindings --all --force
-```
-
-### Register Generated Provider
-
-Laravel 11/12/13 uses `bootstrap/providers.php`.
-
-Add this line if it is not already registered:
+Register the provider in `bootstrap/providers.php`:
 
 ```php
 return [
@@ -145,13 +100,13 @@ return [
 
 ## Route Snippet
 
-CrudForge creates a route snippet file:
+CrudForge writes a standalone route file:
 
 ```text
 routes/crudforge-products.php
 ```
 
-Require it from your application `routes/api.php`:
+Require it from `routes/api.php`:
 
 ```php
 require __DIR__.'/crudforge-products.php';
@@ -161,70 +116,101 @@ require __DIR__.'/crudforge-products.php';
 
 ## Supported Field Types
 
-```text
-string
-text
-integer
-bigInteger
-boolean
-decimal
-float
-date
-datetime
-timestamp
-json
-foreignId
+| Input | Normalised type | Migration column |
+|---|---|---|
+| `string`, `str`, `varchar` | `string` | `string()` |
+| `text` | `text` | `text()->nullable()` |
+| `integer`, `int` | `integer` | `integer()` |
+| `bigInteger`, `bigint` | `bigInteger` | `bigInteger()` |
+| `unsignedInteger`, `uint` | `unsignedInteger` | `unsignedInteger()` |
+| `unsignedBigInteger`, `ubigint` | `unsignedBigInteger` | `unsignedBigInteger()` |
+| `boolean`, `bool` | `boolean` | `boolean()->default(false)` |
+| `decimal`, `float`, `double` | `decimal` | `decimal(10,2)` |
+| `date` | `date` | `date()->nullable()` |
+| `datetime` | `datetime` | `dateTime()->nullable()` |
+| `timestamp` | `timestamp` | `timestamp()->nullable()` |
+| `json`, `jsonb` | `json` | `json()->nullable()` |
+| `foreignId`, `foreign_id` | `foreignId` | `foreignId()->constrained()->cascadeOnDelete()` |
+
+**Validation rules** automatically use `'required'` in `StoreRequest` and `'sometimes'` in `UpdateRequest`.
+
+**Eloquent `$casts`** are generated automatically for `boolean`, `date`, `datetime`, `timestamp`, `decimal`, and `json` fields.
+
+---
+
+## Generated Code Independence
+
+Generated code has **zero runtime dependency** on the CrudForge package:
+
+- Repositories use an inlined driver-aware search (MySQL `LIKE` / PostgreSQL `ILIKE`) rather than importing the package helper.
+- The package may be listed in `require-dev` after generation if your application no longer needs the generator at runtime.
+
+---
+
+## Customising Output Paths & Namespaces
+
+Publish the config and change `paths` or `namespaces` keys:
+
+```php
+// config/crudforge.php
+'paths' => [
+    'models'      => app_path('Domain/Models'),
+    'controllers' => app_path('Http/Controllers/Api'),
+    // ...
+],
+
+'namespaces' => [
+    'models'      => 'App\\Domain\\Models',
+    'controllers' => 'App\\Http\\Controllers\\Api',
+    // ...
+],
 ```
 
-Notes:
+All generators read these values at generation time.
 
-- `json` is used instead of `jsonb` for MySQL/PostgreSQL compatibility.
-- Database enum columns are not generated.
-- Use string columns plus FormRequest validation instead.
-- Search uses a database-driver-aware helper.
+---
+
+## Adding Custom Generators
+
+Tag any `GeneratorContract` implementation with `'crudforge.generators'` in your own service provider to include it in the generation pipeline without modifying the package:
+
+```php
+use MuhammedSalama\CrudForge\Contracts\GeneratorContract;
+
+$this->app->bind(PolicyGenerator::class, PolicyGenerator::class);
+$this->app->tag([PolicyGenerator::class], 'crudforge.generators');
+```
+
+Note: custom generators added this way currently need the `GeneratorOrchestrator` to be re-bound to include them. An automatic registration path is planned.
 
 ---
 
 ## Database Compatibility
 
-CrudForge includes:
-
-```php
-MuhammedSalama\CrudForge\Support\Database\DatabaseDriverHelper
-```
-
-Search behavior:
-
-| Driver | Operator |
+| Driver | Search operator |
 |---|---|
-| PostgreSQL | ILIKE |
-| MySQL | LIKE |
+| PostgreSQL | `ILIKE` (case-insensitive) |
+| MySQL / SQLite | `LIKE` |
 
-Generated repositories use safe searchable fields, safe sortable fields, and no raw user input in `orderBy`.
+The `per_page` parameter is automatically clamped to `[1, 100]` in generated repositories.
 
 ---
 
 ## Safety
 
-CrudForge checks before overwriting existing files and asks for confirmation before replacement.
-
-The binding installer also asks before updating an existing provider unless `--force` is passed.
+- Files are never overwritten without confirmation unless `--force` is passed.
+- Declining to overwrite a single file **skips** it and continues generating remaining files.
+- Regenerating the same module reuses the existing migration file instead of creating a timestamp collision.
+- Output paths are validated against `base_path()` to prevent path traversal.
+- Model names must match `[A-Za-z][A-Za-z0-9]*` (PascalCase, no underscores at root level).
+- Field names must match `[a-z][a-z0-9_]*`.
 
 ---
 
-## Testing The Package
-
-From the package directory:
+## Testing the Package
 
 ```bash
 composer install
-composer dump-autoload
-composer test
-```
-
-Or directly:
-
-```bash
 vendor/bin/phpunit
 ```
 
@@ -232,6 +218,6 @@ vendor/bin/phpunit
 
 ## Current Limitations
 
-- Generated repositories currently depend on `MuhammedSalama\CrudForge\Support\Database\DatabaseDriverHelper`, so the package should remain installed in projects using generated modules.
 - Relationship-aware factories are planned for a later phase.
 - Automatic route appending to `routes/api.php` is planned for a later phase.
+- The `--all` detection in `crudforge:install-bindings` scans `app/Interfaces` — configurable path support is planned.

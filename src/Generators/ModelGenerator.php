@@ -10,10 +10,11 @@ final class ModelGenerator extends AbstractGenerator
     public function generate(string $name, array $fields): array
     {
         $context = $this->buildContext($name, $fields);
+        $base    = $this->outputPath('models', app_path('Models'));
 
-        return [
-            'path' => app_path("Models/{$context['model']}.php"),
+        return [[
+            'path'    => $base . DIRECTORY_SEPARATOR . "{$context['model']}.php",
             'content' => $this->render('model', $context),
-        ];
+        ]];
     }
 }

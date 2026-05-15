@@ -11,9 +11,25 @@ final class MigrationGenerator extends AbstractGenerator
     {
         $context = $this->buildContext($name, $fields);
 
-        return [
-            'path' => database_path("migrations/" . date('Y_m_d_His') . "_create_{$context['table']}_table.php"),
+        return [[
+            'path'    => $this->resolveMigrationPath($context['table']),
             'content' => $this->render('migration', $context),
-        ];
+        ]];
+    }
+
+    /**
+     * Re-use an existing migration file for the same table so that regenerating
+     * a module does not create multiple conflicting migration files.
+     */
+    private function resolveMigrationPath(string $table): string
+    {
+        $pattern = database_path("migrations/*_create_{$table}_table.php");
+        $matches = glob($pattern);
+
+        if ($matches !== false && $matches !== []) {
+            return $matches[0];
+        }
+
+        return database_path('migrations/' . date('Y_m_d_His') . "_create_{$table}_table.php");
     }
 }

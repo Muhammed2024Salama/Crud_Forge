@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Api;
+namespace {{ nsControllers }};
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Store{{ model }}Request;
-use App\Http\Requests\Update{{ model }}Request;
-use App\Http\Resources\{{ model }}Resource;
-use App\Models\{{ model }};
-use App\Services\{{ model }}Service;
+use {{ nsBaseController }};
+use {{ nsRequests }}\Store{{ model }}Request;
+use {{ nsRequests }}\Update{{ model }}Request;
+use {{ nsResources }}\{{ model }}Resource;
+use {{ nsModels }}\{{ model }};
+use {{ nsServices }}\{{ model }}Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Symfony\Component\HttpFoundation\Response;
 
-final class {{ model }}Controller extends Controller
+class {{ model }}Controller extends Controller
 {
     public function __construct(private readonly {{ model }}Service $service) {}
 

@@ -10,16 +10,25 @@ final class RequestGenerator extends AbstractGenerator
     public function generate(string $name, array $fields): array
     {
         $context = $this->buildContext($name, $fields);
-        $storeContext = array_merge($context, ['requestClass' => "Store{$context['model']}Request"]);
-        $updateContext = array_merge($context, ['requestClass' => "Update{$context['model']}Request"]);
+        $base    = $this->outputPath('requests', app_path('Http/Requests'));
+
+        $storeContext = array_merge($context, [
+            'requestClass' => "Store{$context['model']}Request",
+            // 'rules' is already the store rules built by BuildsCrudContext
+        ]);
+
+        $updateContext = array_merge($context, [
+            'requestClass' => "Update{$context['model']}Request",
+            'rules'        => $context['updateRules'],
+        ]);
 
         return [
             [
-                'path' => app_path("Http/Requests/Store{$context['model']}Request.php"),
+                'path'    => $base . DIRECTORY_SEPARATOR . "Store{$context['model']}Request.php",
                 'content' => $this->render('request', $storeContext),
             ],
             [
-                'path' => app_path("Http/Requests/Update{$context['model']}Request.php"),
+                'path'    => $base . DIRECTORY_SEPARATOR . "Update{$context['model']}Request.php",
                 'content' => $this->render('request', $updateContext),
             ],
         ];

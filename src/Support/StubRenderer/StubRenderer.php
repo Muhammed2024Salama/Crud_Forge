@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace MuhammedSalama\CrudForge\Support\StubRenderer;
 
+use MuhammedSalama\CrudForge\Contracts\StubRendererContract;
 use RuntimeException;
 
-final class StubRenderer
+final class StubRenderer implements StubRendererContract
 {
     /**
      * @param array<string, string|int|float|bool|null> $replacements
@@ -26,6 +27,12 @@ final class StubRenderer
         foreach ($replacements as $key => $value) {
             $content = str_replace('{{ ' . $key . ' }}', (string) $value, $content);
             $content = str_replace('{{' . $key . '}}', (string) $value, $content);
+        }
+
+        if (preg_match('/\{\{\s*\w+\s*\}\}/', $content, $leftover)) {
+            throw new RuntimeException(
+                "Stub rendered with unreplaced placeholder: {$leftover[0]} in {$stubPath}"
+            );
         }
 
         return $content;

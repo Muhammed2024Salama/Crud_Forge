@@ -10,10 +10,11 @@ final class RepositoryGenerator extends AbstractGenerator
     public function generate(string $name, array $fields): array
     {
         $context = $this->buildContext($name, $fields);
+        $base    = $this->outputPath('repositories', app_path('Repositories'));
 
-        return [
-            'path' => app_path("Repositories/{$context['model']}Repository.php"),
+        return [[
+            'path'    => $base . DIRECTORY_SEPARATOR . "{$context['model']}Repository.php",
             'content' => $this->render('repository', $context),
-        ];
+        ]];
     }
 }

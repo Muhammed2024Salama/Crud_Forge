@@ -6,16 +6,66 @@ namespace MuhammedSalama\CrudForge;
 
 use MuhammedSalama\CrudForge\Console\Commands\GenerateCrudCommand;
 use MuhammedSalama\CrudForge\Console\Commands\InstallBindingsCommand;
+use MuhammedSalama\CrudForge\Contracts\StubRendererContract;
+use MuhammedSalama\CrudForge\Generators\ControllerGenerator;
+use MuhammedSalama\CrudForge\Generators\FactoryGenerator;
+use MuhammedSalama\CrudForge\Generators\GeneratorOrchestrator;
+use MuhammedSalama\CrudForge\Generators\InterfaceGenerator;
+use MuhammedSalama\CrudForge\Generators\MigrationGenerator;
+use MuhammedSalama\CrudForge\Generators\ModelGenerator;
+use MuhammedSalama\CrudForge\Generators\RepositoryGenerator;
+use MuhammedSalama\CrudForge\Generators\RequestGenerator;
+use MuhammedSalama\CrudForge\Generators\ResourceGenerator;
+use MuhammedSalama\CrudForge\Generators\RouteSnippetGenerator;
+use MuhammedSalama\CrudForge\Generators\ServiceGenerator;
+use MuhammedSalama\CrudForge\Generators\TestGenerator;
+use MuhammedSalama\CrudForge\Generators\TranslationGenerator;
 use MuhammedSalama\CrudForge\Support\StubRenderer\StubRenderer;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
 final class CrudForgeServiceProvider extends ServiceProvider
 {
+    /**
+     * Built-in generator classes, in generation order.
+     * Third-party packages extend the pipeline by tagging their own
+     * GeneratorContract implementations with 'crudforge.generators'.
+     */
+    private const CORE_GENERATORS = [
+        ModelGenerator::class,
+        ControllerGenerator::class,
+        ServiceGenerator::class,
+        RepositoryGenerator::class,
+        InterfaceGenerator::class,
+        RequestGenerator::class,
+        ResourceGenerator::class,
+        MigrationGenerator::class,
+        FactoryGenerator::class,
+        TestGenerator::class,
+        TranslationGenerator::class,
+        RouteSnippetGenerator::class,
+    ];
+
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/crudforge.php', 'crudforge');
 
-        $this->app->singleton(StubRenderer::class, static fn (): StubRenderer => new StubRenderer());
+        $this->app->singleton(StubRendererContract::class, StubRenderer::class);
+
+        // Bind each core generator so the container can resolve it (and so
+        // that the tagged iterable resolves through the container properly).
+        foreach (self::CORE_GENERATORS as $class) {
+            $this->app->bind($class);
+        }
+
+        // Tag core generators — third-party packages add to this tag to extend the pipeline.
+        $this->app->tag(self::CORE_GENERATORS, 'crudforge.generators');
+
+        // The orchestrator iterates the TAGGED generators, so third-party additions
+        // automatically appear in the pipeline without any core changes.
+        $this->app->singleton(GeneratorOrchestrator::class, static function (Application $app): GeneratorOrchestrator {
+            return new GeneratorOrchestrator($app->tagged('crudforge.generators'));
+        });
     }
 
     public function boot(): void

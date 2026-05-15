@@ -10,10 +10,11 @@ final class TestGenerator extends AbstractGenerator
     public function generate(string $name, array $fields): array
     {
         $context = $this->buildContext($name, $fields);
+        $base    = $this->outputPath('tests', base_path('tests/Feature'));
 
-        return [
-            'path' => base_path("tests/Feature/{$context['model']}ApiTest.php"),
+        return [[
+            'path'    => $base . DIRECTORY_SEPARATOR . "{$context['model']}ApiTest.php",
             'content' => $this->render('test', $context),
-        ];
+        ]];
     }
 }

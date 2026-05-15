@@ -10,10 +10,11 @@ final class ResourceGenerator extends AbstractGenerator
     public function generate(string $name, array $fields): array
     {
         $context = $this->buildContext($name, $fields);
+        $base    = $this->outputPath('resources', app_path('Http/Resources'));
 
-        return [
-            'path' => app_path("Http/Resources/{$context['model']}Resource.php"),
+        return [[
+            'path'    => $base . DIRECTORY_SEPARATOR . "{$context['model']}Resource.php",
             'content' => $this->render('resource', $context),
-        ];
+        ]];
     }
 }

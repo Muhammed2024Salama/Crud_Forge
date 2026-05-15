@@ -1,0 +1,10 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    phpVersion: 80200
+    level: 6
+    paths:
+        - src
+    excludePaths:
+        - src/Stubs

@@ -220,16 +220,9 @@ php artisan vendor:publish --tag=crudforge-config
 'defaults' => [
     'pagination_per_page' => 15,
 
-    // URL prefix applied to all CrudForge-generated routes.
-    // Must match the API prefix configured in your application.
-    // In Laravel 11+, the default API prefix is controlled in bootstrap/app.php
-    // via withRouting(apiPrefix: ...). If you change it there, update this value too.
     'route_prefix' => 'api',
 ],
 
-// When true, `crudforge:generate` automatically updates the two
-// CrudForge-owned registry files after each generation run.
-// Set to false in read-only or locked deployments.
 'auto_register' => true,
 ```
 
@@ -444,3 +437,33 @@ Contributions are welcome. Please open an issue before submitting a pull request
 ## License
 
 The MIT License. See [LICENSE](LICENSE).
+
+---
+
+## Support
+
+For support, bug reports, or feature requests:
+
+- Email: devmuhammedsalama@gmail.com
+- Issues: [GitHub Issues](https://github.com/Muhammed2024Salama/Crud_Forge/issues)
+
+---
+
+## Acknowledgments
+
+- Built for Laravel developers who want production-ready CRUD scaffolding
+- Inspired by Laravel clean architecture and modern package development practices
+- Special thanks to all contributors and testers
+
+---
+
+## Related Resources
+
+- [Laravel Documentation](https://laravel.com/docs)
+- [Packagist Package](https://packagist.org/packages/muhammedsalama/crudforge)
+- [PHPStan](https://phpstan.org/)
+- [Orchestra Testbench](https://github.com/orchestral/testbench)
+
+---
+
+Made with ❤️ by Muhammed Salama
